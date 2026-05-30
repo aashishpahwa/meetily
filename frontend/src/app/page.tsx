@@ -18,7 +18,6 @@ import { useRecordingStart } from '@/hooks/useRecordingStart';
 import { useRecordingStop } from '@/hooks/useRecordingStop';
 import { useTranscriptRecovery } from '@/hooks/useTranscriptRecovery';
 import { TranscriptRecovery } from '@/components/TranscriptRecovery';
-import { useMeetingDetector } from '@/hooks/useMeetingDetector';
 import { indexedDBService } from '@/services/indexedDBService';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -60,9 +59,6 @@ export default function Home() {
     loadMeetingTranscripts,
     deleteRecoverableMeeting
   } = useTranscriptRecovery();
-
-  // Auto-detect Zoom / Google Meet → auto-start/stop recording
-  useMeetingDetector();
 
   const router = useRouter();
 

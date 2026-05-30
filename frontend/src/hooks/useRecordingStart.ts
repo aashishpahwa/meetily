@@ -265,8 +265,10 @@ export function useRecordingStart(
       }
 
       try {
-        // Generate meeting title
-        const generatedMeetingTitle = generateMeetingTitle();
+        // Use detected meeting name if set by useMeetingDetector, else generate one
+        const detectedTitle = sessionStorage.getItem('meetingDetectorTitle');
+        sessionStorage.removeItem('meetingDetectorTitle');
+        const generatedMeetingTitle = detectedTitle || generateMeetingTitle();
 
         // Set STARTING status before initiating backend recording
         setStatus(RecordingStatus.STARTING, 'Initializing recording...');

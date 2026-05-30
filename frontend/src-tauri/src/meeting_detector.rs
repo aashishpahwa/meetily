@@ -104,7 +104,7 @@ $found = ''
 $found
 "#;
         match tokio::process::Command::new("powershell")
-            .args(["-NoProfile", "-NonInteractive", "-Command", ps])
+            .args(["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", ps])
             .output()
             .await
         {

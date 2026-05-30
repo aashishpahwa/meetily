@@ -25,6 +25,7 @@ import { RecordingPostProcessingProvider } from '@/contexts/RecordingPostProcess
 import { ImportAudioDialog, ImportDropOverlay } from '@/components/ImportAudio'
 import { ImportDialogProvider } from '@/contexts/ImportDialogContext'
 import { isAudioExtension, getAudioFormatsDisplayList } from '@/constants/audioFormats'
+import { useMeetingDetector } from '@/hooks/useMeetingDetector'
 
 
 const sourceSans3 = Source_Sans_3({
@@ -32,6 +33,14 @@ const sourceSans3 = Source_Sans_3({
   weight: ['400', '500', '600', '700'],
   variable: '--font-source-sans-3',
 })
+
+// Mounts the meeting detector inside the RecordingStateProvider tree so it
+// is always alive regardless of which page the user is on.
+// Defined at module level so React never sees a new function type on re-render.
+function MeetingDetectorMount() {
+  useMeetingDetector();
+  return null;
+}
 
 // Module-level component — stable reference across RootLayout re-renders.
 // Defined here (not inside RootLayout) so React never sees a new function type
@@ -246,6 +255,8 @@ export default function RootLayout({
                             <ImportDialogProvider onOpen={handleOpenImportDialog}>
                               {/* Download progress toast provider - listens for background downloads */}
                               <DownloadProgressToastProvider />
+                              {/* Meeting detector — auto-start/stop on Zoom/Google Meet */}
+                              <MeetingDetectorMount />
 
                               {/* Show onboarding or main app */}
                               {showOnboarding ? (

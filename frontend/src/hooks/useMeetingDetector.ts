@@ -63,6 +63,10 @@ export function useMeetingDetector() {
 
           console.log(`[MeetingDetector] ${label} meeting detected: "${meeting_name}" — starting recording`);
 
+          // Store the detected meeting name so handleDirectStart picks it up
+          // instead of generating a generic timestamp title
+          sessionStorage.setItem('meetingDetectorTitle', meeting_name);
+
           // Use the same window-event mechanism already wired in useRecordingStart
           window.dispatchEvent(
             new CustomEvent('start-recording-from-sidebar', {
