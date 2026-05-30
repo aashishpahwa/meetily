@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { Switch } from "./ui/switch"
-import { FolderOpen } from "lucide-react"
+import { FolderOpen, Video } from "lucide-react"
 import { invoke } from "@tauri-apps/api/core"
 import Analytics from "@/lib/analytics"
 import AnalyticsConsentSwitch from "./AnalyticsConsentSwitch"
@@ -22,12 +22,38 @@ export function PreferenceSettings() {
   const [previousNotificationsEnabled, setPreviousNotificationsEnabled] = useState<boolean | null>(null);
   const hasTrackedViewRef = useRef(false);
 
+  // Meeting auto-detect state
+  const [autoDetectEnabled, setAutoDetectEnabled] = useState(false);
+  const [autoDetectLoaded, setAutoDetectLoaded] = useState(false);
+
   // Lazy load preferences on mount (only loads if not already cached)
   useEffect(() => {
     loadPreferences();
     // Reset tracking ref on mount (every tab visit)
     hasTrackedViewRef.current = false;
   }, [loadPreferences]);
+
+  // Load meeting auto-detect setting from Rust on mount
+  useEffect(() => {
+    invoke<boolean>('get_meeting_auto_detect')
+      .then((val) => {
+        setAutoDetectEnabled(val);
+        setAutoDetectLoaded(true);
+      })
+      .catch(() => setAutoDetectLoaded(true));
+  }, []);
+
+  const handleAutoDetectChange = async (enabled: boolean) => {
+    setAutoDetectEnabled(enabled);
+    try {
+      await invoke('set_meeting_auto_detect', { enabled });
+      await Analytics.track('meeting_auto_detect_changed', { enabled: enabled.toString() });
+    } catch (error) {
+      console.error('Failed to update meeting auto-detect setting:', error);
+      // Revert on error
+      setAutoDetectEnabled(!enabled);
+    }
+  };
 
   // Track preferences viewed analytics on every tab visit (once per mount)
   useEffect(() => {
@@ -148,6 +174,31 @@ export function PreferenceSettings() {
 
   return (
     <div className="space-y-6">
+      {/* Meeting Auto-Detect Section */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+          <div className="flex items-start gap-3">
+            <Video className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                Auto-detect meetings
+              </h3>
+              <p className="text-sm text-gray-600">
+                Automatically start recording when a Zoom or Google Meet session begins, and stop when it ends.
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
+                Supports: Zoom, Google Meet
+              </p>
+            </div>
+          </div>
+          <Switch
+            checked={autoDetectEnabled}
+            onCheckedChange={handleAutoDetectChange}
+            disabled={!autoDetectLoaded}
+          />
+        </div>
+      </div>
+
       {/* Notifications Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
         <div className="flex items-center justify-between">

@@ -38,6 +38,7 @@ pub(crate) use perf_trace;
 pub mod analytics;
 pub mod api;
 pub mod audio;
+pub mod meeting_detector;
 pub mod config;
 pub mod console_utils;
 pub mod database;
@@ -484,6 +485,12 @@ pub fn run() {
             })
             .expect("Failed to initialize database");
 
+            // Spawn meeting detector (Zoom / Google Meet auto-start/stop)
+            let app_for_detector = _app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                meeting_detector::start_meeting_detector(app_for_detector).await;
+            });
+
             // Initialize bundled templates directory for dynamic template discovery
             log::info!("Initializing bundled templates directory...");
             if let Ok(resource_path) = _app.handle().path().resource_dir() {
@@ -593,6 +600,9 @@ pub fn run() {
             audio::incremental_saver::recover_audio_from_checkpoints,
             audio::incremental_saver::cleanup_checkpoints,
             audio::incremental_saver::has_audio_checkpoints,
+            // Meeting auto-detect commands
+            meeting_detector::set_meeting_auto_detect,
+            meeting_detector::get_meeting_auto_detect,
             console_utils::show_console,
             console_utils::hide_console,
             console_utils::toggle_console,
